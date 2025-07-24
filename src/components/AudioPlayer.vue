@@ -22,12 +22,27 @@
 				<span v-if="loop">🔁</span>
 				<span v-else>➡️</span>
 			</button>
+			<div class="volume-container">
+				<button class="volume-icon-btn" :aria-label="isMuted ? 'Unmute' : 'Mute'" @click="toggleMute">
+					<i :class="volumeIconClass" class="volume-icon"></i>
+				</button>
+				<input
+					type="range"
+					min="0"
+					max="1"
+					step="0.01"
+					v-model.number="volume"
+					@input="updateVolume"
+					class="volume-slider"
+					:aria-label="'Volume: ' + Math.round(volume * 100) + '%'"
+				/>
+			</div>
 		</div>
 	</div>
 </template>
 
 <script lang="ts">
-import { ref, watch, defineComponent, computed } from "vue";
+import { ref, watch, defineComponent, computed, onMounted } from "vue";
 
 export default defineComponent({
 	name: "AudioPlayer",
@@ -57,6 +72,50 @@ export default defineComponent({
 	emits: ["play", "pause", "stop", "ended", "previous", "next", "toggle-loop", "update:selectedIndex"],
 	setup(props, { emit }) {
 		const audio = ref(null);
+		const volume = ref(1);
+		const isMuted = ref(false);
+		const lastVolume = ref(1);
+
+		onMounted(() => {
+			if (audio.value) {
+				audio.value.volume = volume.value;
+			}
+		});
+
+		watch(volume, (val) => {
+			if (audio.value) {
+				audio.value.volume = val;
+			}
+			if (val === 0) {
+				isMuted.value = true;
+			} else {
+				isMuted.value = false;
+				lastVolume.value = val;
+			}
+		});
+
+		const updateVolume = () => {
+			if (audio.value) {
+				audio.value.volume = volume.value;
+			}
+		};
+
+		const toggleMute = () => {
+			if (isMuted.value) {
+				volume.value = lastVolume.value > 0 ? lastVolume.value : 1;
+				isMuted.value = false;
+			} else {
+				lastVolume.value = volume.value;
+				volume.value = 0;
+				isMuted.value = true;
+			}
+		};
+
+		const volumeIconClass = computed(() => {
+			if (isMuted.value || volume.value === 0) return "pi pi-volume-off";
+			if (volume.value < 0.5) return "pi pi-volume-down";
+			return "pi pi-volume-up";
+		});
 
 		const onPlay = () => {
 			if (audio.value) {
@@ -144,6 +203,11 @@ export default defineComponent({
 			playPauseAriaLabel,
 			playPrevious,
 			playNext,
+			volume,
+			updateVolume,
+			volumeIconClass,
+			isMuted,
+			toggleMute,
 		};
 	},
 });
@@ -208,5 +272,80 @@ export default defineComponent({
 	background: #1976d2;
 	color: #fff;
 	border-color: #1976d2;
+}
+.volume-container {
+	display: flex;
+	align-items: center;
+	margin-left: 1.5rem;
+	min-width: 120px;
+}
+.volume-icon-btn {
+	background: transparent;
+	border: none;
+	outline: none;
+	cursor: pointer;
+	margin-right: 0.5em;
+	padding: 0;
+	display: flex;
+	align-items: center;
+	color: #b3b3b3;
+	font-size: 1.2em;
+	transition: color 0.2s;
+}
+.volume-icon-btn:hover {
+	color: #1db954;
+}
+.volume-icon {
+	font-size: 1.2em;
+}
+.volume-slider {
+	width: 90px;
+	accent-color: #1db954;
+	background: #444;
+	border-radius: 4px;
+	height: 2px;
+	outline: none;
+}
+.volume-slider::-webkit-slider-thumb {
+	background: #1db954;
+	border-radius: 50%;
+	width: 16px;
+	height: 16px;
+	border: none;
+}
+.volume-slider::-webkit-slider-runnable-track {
+	background: #444;
+	height: 2px;
+	border-radius: 4px;
+}
+.volume-slider::-moz-range-thumb {
+	background: #1db954;
+	border-radius: 50%;
+	width: 16px;
+	height: 16px;
+	border: none;
+}
+
+.volume-slider::-moz-range-progress {
+	background: #1db954;
+	height: 4px;
+	border-radius: 4px;
+}
+.volume-slider::-moz-range-track {
+	background: #444;
+	height: 2px;
+	border-radius: 4px;
+}
+.volume-slider::-ms-thumb {
+	background: #1db954;
+	border-radius: 50%;
+	width: 16px;
+	height: 16px;
+	border: none;
+}
+.volume-slider::-ms-fill-lower,
+.volume-slider::-ms-fill-upper {
+	background: #1db954;
+	border-radius: 4px;
 }
 </style>

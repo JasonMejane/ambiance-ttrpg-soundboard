@@ -1,55 +1,48 @@
 <template>
-	<div id="app" class="p-m-0 p-p-0">
-		<div class="p-d-flex p-flex-column p-ai-center p-mb-4">
-			<h1 class="p-mt-4 p-mb-2">TTRPG Ambiance</h1>
-			<Divider class="p-mb-3" />
-		</div>
-		<div class="dashboard p-d-flex p-flex-row p-jc-center p-ai-start p-mt-2">
-			<div class="sidebar p-mr-4" style="min-width: 260px; max-width: 320px; width: 100%">
-				<Card>
-					<template #title>Playlists</template>
-					<template #content>
-						<PlaylistManager
-							:playlists="playlists"
-							:selectedPlaylistIndex="selectedPlaylistIndex"
-							:selectedPlaylist="selectedPlaylist"
-							:audioFiles="audioFiles"
-							@create-playlist="createPlaylist"
-							@select-playlist="selectPlaylist"
-							@delete-playlist="deletePlaylist"
-							@add-file-to-playlist="addFileToPlaylist"
-							@remove-file-from-playlist="removeFileFromPlaylist"
-							@move-file-in-playlist="moveFileInPlaylist"
-						/>
-						<div v-if="selectedPlaylist && selectedPlaylist.audioFiles.length" class="playlist-controls p-mt-3">
-							<Button
-								label="Load Playlist"
-								icon="pi pi-download"
-								class="p-button-sm p-button-outlined"
-								@click="loadPlaylist"
-							/>
-						</div>
-					</template>
-				</Card>
+	<div id="app" class="ambiance-app">
+		<aside class="ambiance-sidebar">
+			<div class="sidebar-header">
+				<span class="ambiance-logo">🎵</span>
+				<div>
+					<span class="ambiance-title">Ambiance</span>
+					<br />
+					<span class="ambiance-subtitle">TTRPG Soundboard</span>
+				</div>
 			</div>
-			<div class="main-content" style="flex: 1; min-width: 0">
-				<Card class="p-mb-4">
-					<template #title>Audio Files</template>
-					<template #content>
-						<FileList
-							:audioFiles="audioFiles"
-							@file-selected="onFileSelect"
-							@file-list-updated="onFileListUpdated"
-							:selectedIndex="selectedIndex"
-							:playingIndex="selectedIndex"
-							:playbackState="playbackState"
-							@update:selectedIndex="onSelectedIndexUpdate"
-						/>
-					</template>
-				</Card>
+			<nav class="sidebar-nav">
+				<div class="sidebar-section">Playlists</div>
+				<PlaylistManager
+					:playlists="playlists"
+					:selectedPlaylistIndex="selectedPlaylistIndex"
+					:selectedPlaylist="selectedPlaylist"
+					:audioFiles="audioFiles"
+					@create-playlist="createPlaylist"
+					@select-playlist="selectPlaylist"
+					@delete-playlist="deletePlaylist"
+					@add-file-to-playlist="addFileToPlaylist"
+					@remove-file-from-playlist="removeFileFromPlaylist"
+					@move-file-in-playlist="moveFileInPlaylist"
+				/>
+				<div v-if="selectedPlaylist && selectedPlaylist.audioFiles.length" class="playlist-controls p-mt-3">
+					<Button label="Load Playlist" icon="pi pi-download" class="p-button-sm p-button-outlined" @click="loadPlaylist" />
+				</div>
+			</nav>
+		</aside>
+		<main class="ambiance-main">
+			<div class="ambiance-card">
+				<h2 class="ambiance-section-title">Audio Files</h2>
+				<FileList
+					:audioFiles="audioFiles"
+					@file-selected="onFileSelect"
+					@file-list-updated="onFileListUpdated"
+					:selectedIndex="selectedIndex"
+					:playingIndex="selectedIndex"
+					:playbackState="playbackState"
+					@update:selectedIndex="onSelectedIndexUpdate"
+				/>
 			</div>
-		</div>
-		<div class="player-footer">
+		</main>
+		<div class="ambiance-player-bar">
 			<AudioPlayer
 				ref="audioPlayerRef"
 				:key="selectedFile?.url || ''"
@@ -265,52 +258,98 @@ export default defineComponent({
 </script>
 
 <style scoped>
-#app {
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap");
+
+.ambiance-app {
 	min-height: 100vh;
-}
-.dashboard {
 	display: flex;
-	justify-content: flex-start;
+	flex-direction: row;
+	font-family: "Inter", system-ui, Arial, sans-serif;
+	background: #191414;
+	color: #fff;
+}
+.ambiance-sidebar {
+	width: 300px;
+	min-width: 220px;
+	max-width: 340px;
+	background: #121212;
+	padding: 2rem 1.5rem 1.5rem 1.5rem;
+	display: flex;
+	flex-direction: column;
 	align-items: flex-start;
-	margin-top: 0;
+	border-right: 1px solid #232323;
+	height: 100vh;
+	position: sticky;
+	top: 0;
 }
-.sidebar {
-	min-width: 260px;
-	max-width: 320px;
+.sidebar-header {
+	display: flex;
+	align-items: center;
+	font-size: 1.5em;
+	font-weight: 600;
+	margin-bottom: 2.5rem;
+	color: #1db954;
+}
+.ambiance-logo {
+	font-size: 2em;
+	margin-right: 0.5em;
+}
+.ambiance-title {
+	font-size: 1.2em;
+	letter-spacing: 1px;
+	text-align: center;
+}
+.ambiance-subtitle {
+	font-size: 0.5em;
+	letter-spacing: 1px;
+	text-align: center;
+}
+.sidebar-nav {
 	width: 100%;
-	margin-right: 2rem;
 }
-.main-content {
+.sidebar-section {
+	font-size: 1.1em;
+	font-weight: 600;
+	margin-bottom: 1em;
+	color: #b3b3b3;
+	letter-spacing: 1px;
+}
+.ambiance-main {
 	flex: 1;
 	min-width: 0;
+	padding: 2.5rem 2rem 6rem 2rem;
+	background: #191414;
+	display: flex;
+	flex-direction: column;
+	align-items: flex-start;
 }
-.player-footer {
-	position: sticky;
-	bottom: 0;
-	left: 0;
+.ambiance-card {
+	background: #232323;
+	border-radius: 18px;
+	box-shadow: 0 2px 16px 0 rgba(0, 0, 0, 0.12);
+	padding: 2rem 2rem 1.5rem 2rem;
 	width: 100%;
-	background: var(--surface-ground, #1a1a1a);
+	max-width: 900px;
+	margin-bottom: 2rem;
+}
+.ambiance-section-title {
+	font-size: 1.3em;
+	font-weight: 600;
+	margin-bottom: 1.5rem;
+	color: #fff;
+}
+.ambiance-player-bar {
+	position: fixed;
+	left: 0;
+	bottom: 0;
+	width: 100vw;
+	background: #282828;
 	z-index: 100;
 	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
 	padding: 0.5rem 0 0.5rem 0;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-}
-.loop-btn {
-	margin-left: 1.5rem;
-	font-size: 1.5em;
-	background: none;
-	border: none;
-	color: #fff;
-	cursor: pointer;
-	transition: color 0.2s;
-	outline: none;
-}
-.loop-btn.active {
-	color: #1db954;
-}
-.loop-btn:hover {
-	color: #1db954;
+	border-top: 1px solid #232323;
 }
 </style>

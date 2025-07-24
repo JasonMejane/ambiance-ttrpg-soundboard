@@ -22,21 +22,25 @@
 			</span>
 		</div>
 		<div v-if="!fileApiSupported" class="warning">Your browser does not support the File API required for local audio selection.</div>
-		<ul>
-			<li
-				v-for="(file, idx) in audioFiles"
-				:key="file.name + file.url"
-				@click="selectFile(file, idx)"
-				:class="{ selected: idx === selectedIndex }"
-			>
-				<span v-if="idx === playingIndex" class="playing-indicator" :class="indicatorClass">
-					<template v-if="playbackState === 'playing'">▶</template>
-					<template v-else-if="playbackState === 'paused'">⏸</template>
-					<template v-else>⏹</template>
-				</span>
-				{{ file.name }}
-			</li>
-		</ul>
+		<table class="file-table">
+			<tbody>
+				<tr
+					v-for="(file, idx) in audioFiles"
+					:key="file.name + file.url"
+					@click="selectFile(file, idx)"
+					:class="{ selected: idx === selectedIndex }"
+				>
+					<td class="indicator-cell">
+						<span v-if="idx === playingIndex" class="playing-indicator" :class="indicatorClass">
+							<template v-if="playbackState === 'playing'">▶</template>
+							<template v-else-if="playbackState === 'paused'">⏸</template>
+							<template v-else>⏹</template>
+						</span>
+					</td>
+					<td class="filename-cell">{{ file.name }}</td>
+				</tr>
+			</tbody>
+		</table>
 	</div>
 </template>
 
@@ -130,36 +134,35 @@ export default defineComponent({
 .file-list h2 {
 	font-size: 1.5em;
 }
-
-.file-list label {
-	display: block;
-	margin-bottom: 8px;
+.file-table {
+	width: 100%;
+	border-collapse: separate;
+	border-spacing: 0 0.25rem;
+	margin-top: 1.5rem;
 }
-
-.file-list input[type="file"] {
-	margin-bottom: 12px;
-}
-
-.file-list ul {
-	list-style-type: none;
-	padding: 0;
-}
-
-.file-list li {
+.file-table tr {
 	cursor: pointer;
-	padding: 5px;
-	transition: background-color 0.3s;
+	transition: background-color 0.2s;
+	border-radius: 10px;
 }
-
-.file-list li.selected {
+.file-table tr.selected {
+	background: #232323;
 	font-weight: bold;
 }
-
-.file-list li:hover {
+.file-table tr:hover {
+	background: #282828;
 }
-
+.indicator-cell {
+	width: 36px;
+	text-align: center;
+}
+.filename-cell {
+	padding-left: 0.5rem;
+	font-size: 1.08em;
+	color: #fff;
+	letter-spacing: 0.2px;
+}
 .playing-indicator {
-	margin-right: 6px;
 	font-size: 1.3em;
 	vertical-align: middle;
 	display: inline-block;
