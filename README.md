@@ -1,13 +1,10 @@
-# music-player README.md
-
-# Music Player App
+# TTRPG Ambiance - The TTRPG soundboard app
 
 This is a lightweight Vue application that allows users to play music from any local folder. The app provides a user-friendly interface to browse and select audio files for playback.
 
 ## Project Structure
 
 ```
-music-player
 ├── src
 │   ├── App.vue                # Root component of the Vue application
 │   ├── assets
@@ -29,31 +26,29 @@ music-player
 ## Setup Instructions
 
 1. Clone the repository:
-   ```
-   git clone <repository-url>
-   ```
 
-2. Navigate to the project directory:
-   ```
-   cd music-player
-   ```
+    ```
+    git clone <repository-url>
+    ```
 
-3. Install the dependencies:
-   ```
-   npm install
-   ```
+2. Install the dependencies:
 
-4. Run the development server:
-   ```
-   npm run dev
-   ```
+    ```
+    npm install
+    ```
 
-5. Open your browser and go to `http://localhost:3000` to view the app.
+3. Run the development server:
+
+    ```
+    npm run dev
+    ```
+
+4. Open your browser and go to `http://localhost:3000` to view the app.
 
 ## Usage
 
-- Use the `FileList` component to browse and select audio files from your local folder.
-- The `AudioPlayer` component will handle playback of the selected audio files.
+-   Use the `FileList` component to browse and select audio files from your local folder.
+-   The `AudioPlayer` component will handle playback of the selected audio files.
 
 ## License
 

@@ -6,9 +6,9 @@
 		</audio>
 		<div v-else>No audio selected.</div>
 		<div class="controls">
-			<button @click="play" :disabled="!currentAudio">Play</button>
-			<button @click="pause" :disabled="!currentAudio">Pause</button>
-			<button @click="stop" :disabled="!currentAudio">Stop</button>
+			<button @click="onPlay" :disabled="!currentAudio" aria-label="Play">▶</button>
+			<button @click="onPause" :disabled="!currentAudio" aria-label="Pause">⏸</button>
+			<button @click="onStop" :disabled="!currentAudio" aria-label="Stop">⏹</button>
 		</div>
 	</div>
 </template>
@@ -25,45 +25,49 @@ export default defineComponent({
 			default: "",
 		},
 	},
-	setup(props) {
+	emits: ["play", "pause", "stop", "ended"],
+	setup(props, { emit }) {
 		const audio = ref<HTMLAudioElement | null>(null);
 
-		const play = () => {
+		const onPlay = () => {
 			if (audio.value) {
 				audio.value.play();
+				emit("play");
 			}
 		};
 
-		const pause = () => {
+		const onPause = () => {
 			if (audio.value) {
 				audio.value.pause();
+				emit("pause");
 			}
 		};
 
-		const stop = () => {
+		const onStop = () => {
 			if (audio.value) {
 				audio.value.pause();
 				audio.value.currentTime = 0;
+				emit("stop");
 			}
 		};
 
 		const onEnded = () => {
-			// Handle audio ended event
+			emit("ended");
 		};
 
 		// Stop playback if the audio source changes
 		watch(
 			() => props.currentAudio,
 			() => {
-				stop();
+				onStop();
 			}
 		);
 
 		return {
 			audio,
-			play,
-			pause,
-			stop,
+			onPlay,
+			onPause,
+			onStop,
 			onEnded,
 		};
 	},
@@ -79,5 +83,19 @@ export default defineComponent({
 
 .controls {
 	margin-top: 10px;
+}
+.controls button {
+	font-size: 1.5em;
+	padding: 6px 14px;
+	margin: 0 4px;
+	border-radius: 6px;
+	border: 1px solid #ccc;
+	background: #f7f7f7;
+	cursor: pointer;
+	transition: background 0.2s;
+}
+.controls button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
 }
 </style>

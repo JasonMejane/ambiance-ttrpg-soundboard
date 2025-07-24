@@ -6,3 +6,8 @@ export interface AudioFile {
 	duration: number; // Duration in seconds
 	isPlaying: boolean; // Indicates if the audio file is currently playing
 }
+
+export interface Playlist {
+	name: string;
+	audioFiles: AudioFile[];
+}

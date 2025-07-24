@@ -11,14 +11,19 @@
 				@click="selectFile(file, idx)"
 				:class="{ selected: idx === selectedIndex }"
 			>
-				<span v-if="idx === selectedIndex">▶ </span>{{ file.name }}
+				<span v-if="idx === playingIndex" class="playing-indicator" :class="indicatorClass">
+					<template v-if="playbackState === 'playing'">▶</template>
+					<template v-else-if="playbackState === 'paused'">⏸</template>
+					<template v-else>⏹</template>
+				</span>
+				{{ file.name }}
 			</li>
 		</ul>
 	</div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, onMounted, PropType } from "vue";
+import { defineComponent, ref, onMounted, PropType, computed } from "vue";
 import type { AudioFile } from "../types";
 
 export default defineComponent({
@@ -32,6 +37,14 @@ export default defineComponent({
 		selectedIndex: {
 			type: Number as PropType<number>,
 			default: -1,
+		},
+		playingIndex: {
+			type: Number as PropType<number>,
+			default: -1,
+		},
+		playbackState: {
+			type: String as PropType<"playing" | "paused" | "stopped">,
+			default: "stopped",
 		},
 	},
 	setup(props, { emit }) {
@@ -61,11 +74,21 @@ export default defineComponent({
 			emit("update:selectedIndex", idx);
 		};
 
+		const indicatorClass = computed(() => {
+			if (props.playingIndex === props.selectedIndex) {
+				if (props.playbackState === "playing") return "animated playing";
+				if (props.playbackState === "paused") return "paused";
+				if (props.playbackState === "stopped") return "stopped";
+			}
+			return "";
+		});
+
 		return {
 			onFilesSelected,
 			selectFile,
 			fileInput,
 			fileApiSupported,
+			indicatorClass,
 		};
 	},
 });
@@ -109,6 +132,36 @@ export default defineComponent({
 	background-color: #f0f0f0;
 }
 
+.playing-indicator {
+	margin-right: 6px;
+	font-size: 1.3em;
+	vertical-align: middle;
+	display: inline-block;
+}
+.animated.playing {
+	color: #1db954;
+	animation: pulse 0.7s infinite;
+}
+.paused {
+	color: #f5a623;
+}
+.stopped {
+	color: #b00;
+}
+@keyframes pulse {
+	0% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.5);
+		opacity: 0.6;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
 .warning {
 	color: #b00;
 	margin-bottom: 10px;
