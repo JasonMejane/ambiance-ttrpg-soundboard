@@ -1,48 +1,80 @@
 <template>
 	<div class="playlist-manager">
-		<h2>Playlists</h2>
-		<form @submit.prevent="handleCreate">
-			<input v-model="newPlaylistName" placeholder="New playlist name" />
-			<button type="submit" title="Add playlist">➕</button>
+		<form @submit.prevent="handleCreate" class="p-d-flex p-ai-center p-mb-3">
+			<InputText v-model="newPlaylistName" placeholder="New playlist name" class="p-mr-2" style="width: 70%" />
+			<Button type="submit" icon="pi pi-plus" class="p-button-sm p-button-success" :disabled="!newPlaylistName.trim()" />
 		</form>
-		<ul>
-			<li
-				v-for="(playlist, idx) in playlists"
-				:key="playlist.name + idx"
-				:class="{ selected: idx === selectedPlaylistIndex }"
-				@click="emitSelect(idx)"
-			>
-				<span v-if="idx === selectedPlaylistIndex">▶ </span>{{ playlist.name }}
-				<button class="delete-btn" @click.stop="emitDelete(idx)" title="Delete playlist">🗑️</button>
-			</li>
-		</ul>
-
+		<Listbox
+			:options="playlists"
+			optionLabel="name"
+			optionValue="name"
+			:value="playlists[selectedPlaylistIndex]?.name || ''"
+			@change="(e) => emitSelect(playlists.findIndex((p) => p.name === e.value))"
+			class="p-mb-3"
+			style="width: 100%"
+			:filter="true"
+			filterPlaceholder="Search playlists"
+			listStyle="max-height:180px"
+		>
+			<template #option="slotProps">
+				<div class="p-d-flex p-jc-between p-ai-center">
+					<span>{{ slotProps.option.name }}</span>
+					<Button
+						icon="pi pi-trash"
+						class="p-button-text p-button-danger p-ml-2"
+						@click.stop="emitDelete(playlists.indexOf(slotProps.option))"
+					/>
+				</div>
+			</template>
+		</Listbox>
+		<Divider class="p-mb-2" />
 		<div v-if="selectedPlaylist">
-			<h3>Files in "{{ selectedPlaylist.name }}"</h3>
-			<ul>
-				<li v-for="(file, idx) in selectedPlaylist.audioFiles" :key="file.name + file.url">
-					{{ file.name }}
-					<button class="move-btn" @click="emitMoveFile(idx, 'up')" :disabled="idx === 0" title="Move up">⬆️</button>
-					<button
-						class="move-btn"
-						@click="emitMoveFile(idx, 'down')"
-						:disabled="idx === selectedPlaylist.audioFiles.length - 1"
-						title="Move down"
-					>
-						⬇️
-					</button>
-					<button class="remove-btn" @click="emitRemoveFile(idx)" title="Remove from playlist">🗑️</button>
-				</li>
-			</ul>
-			<div v-if="audioFiles.length">
-				<label>Add file to playlist:</label>
-				<select v-model="selectedFileToAdd">
-					<option disabled value="">Select a file</option>
-					<option v-for="file in availableFilesToAdd" :key="file.name + file.url" :value="file.url">
-						{{ file.name }}
-					</option>
-				</select>
-				<button @click="addFileToPlaylist" :disabled="!selectedFileToAdd" title="Add to playlist">➕</button>
+			<h3 class="p-mb-2">Files in "{{ selectedPlaylist.name }}"</h3>
+			<Listbox
+				:options="selectedPlaylist.audioFiles"
+				optionLabel="name"
+				optionValue="url"
+				:value="null"
+				class="p-mb-2"
+				style="width: 100%"
+				listStyle="max-height:180px"
+			>
+				<template #option="slotProps">
+					<div class="p-d-flex p-jc-between p-ai-center">
+						<span>{{ slotProps.option.name }}</span>
+						<span>
+							<Button
+								icon="pi pi-arrow-up"
+								class="p-button-text p-button-secondary p-mr-1"
+								@click.stop="emitMoveFile(slotProps.index, 'up')"
+								:disabled="slotProps.index === 0"
+							/>
+							<Button
+								icon="pi pi-arrow-down"
+								class="p-button-text p-button-secondary p-mr-1"
+								@click.stop="emitMoveFile(slotProps.index, 'down')"
+								:disabled="slotProps.index === selectedPlaylist.audioFiles.length - 1"
+							/>
+							<Button
+								icon="pi pi-trash"
+								class="p-button-text p-button-danger"
+								@click.stop="emitRemoveFile(slotProps.index)"
+							/>
+						</span>
+					</div>
+				</template>
+			</Listbox>
+			<div v-if="audioFiles.length" class="p-d-flex p-ai-center">
+				<Dropdown
+					v-model="selectedFileToAdd"
+					:options="availableFilesToAdd"
+					optionLabel="name"
+					optionValue="url"
+					placeholder="Add file to playlist"
+					class="p-mr-2"
+					style="width: 70%"
+				/>
+				<Button icon="pi pi-plus" class="p-button-sm p-button-success" @click="addFileToPlaylist" :disabled="!selectedFileToAdd" />
 			</div>
 		</div>
 	</div>
@@ -137,60 +169,6 @@ export default defineComponent({
 
 <style scoped>
 .playlist-manager {
-	margin: 20px 0;
-}
-
-.playlist-manager h2 {
-	font-size: 1.3em;
-}
-
-.playlist-manager form {
-	margin-bottom: 10px;
-}
-
-.playlist-manager input {
-	padding: 4px 8px;
-	margin-right: 4px;
-}
-
-.playlist-manager ul {
-	list-style-type: none;
-	padding: 0;
-}
-
-.playlist-manager li {
-	cursor: pointer;
-	padding: 5px;
-	transition: background-color 0.3s;
-	display: flex;
-	align-items: center;
-	justify-content: space-between;
-}
-
-.playlist-manager li.selected {
-	background-color: #b3d4fc;
-	font-weight: bold;
-}
-
-.playlist-manager li:hover {
-	background-color: #f0f0f0;
-}
-
-.delete-btn,
-.remove-btn,
-.move-btn {
-	background: none;
-	border: none;
-	color: #b00;
-	cursor: pointer;
-	font-size: 1em;
-	margin-left: 8px;
-}
-.move-btn {
-	color: #333;
-}
-.move-btn:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
+	margin: 0;
 }
 </style>

@@ -1,44 +1,71 @@
 <template>
-	<div id="app">
-		<h1>TTRPG Ambiance</h1>
-		<div class="dashboard">
-			<div class="sidebar">
-				<PlaylistManager
-					:playlists="playlists"
-					:selectedPlaylistIndex="selectedPlaylistIndex"
-					:selectedPlaylist="selectedPlaylist"
-					:audioFiles="audioFiles"
-					@create-playlist="createPlaylist"
-					@select-playlist="selectPlaylist"
-					@delete-playlist="deletePlaylist"
-					@add-file-to-playlist="addFileToPlaylist"
-					@remove-file-from-playlist="removeFileFromPlaylist"
-					@move-file-in-playlist="moveFileInPlaylist"
-				/>
-				<div v-if="selectedPlaylist && selectedPlaylist.audioFiles.length" class="playlist-controls">
-					<button @click="loadPlaylist">Load Playlist</button>
-				</div>
+	<div id="app" class="p-m-0 p-p-0">
+		<div class="p-d-flex p-flex-column p-ai-center p-mb-4">
+			<h1 class="p-mt-4 p-mb-2">TTRPG Ambiance</h1>
+			<Divider class="p-mb-3" />
+		</div>
+		<div class="dashboard p-d-flex p-flex-row p-jc-center p-ai-start p-mt-2">
+			<div class="sidebar p-mr-4" style="min-width: 260px; max-width: 320px; width: 100%">
+				<Card>
+					<template #title>Playlists</template>
+					<template #content>
+						<PlaylistManager
+							:playlists="playlists"
+							:selectedPlaylistIndex="selectedPlaylistIndex"
+							:selectedPlaylist="selectedPlaylist"
+							:audioFiles="audioFiles"
+							@create-playlist="createPlaylist"
+							@select-playlist="selectPlaylist"
+							@delete-playlist="deletePlaylist"
+							@add-file-to-playlist="addFileToPlaylist"
+							@remove-file-from-playlist="removeFileFromPlaylist"
+							@move-file-in-playlist="moveFileInPlaylist"
+						/>
+						<div v-if="selectedPlaylist && selectedPlaylist.audioFiles.length" class="playlist-controls p-mt-3">
+							<Button
+								label="Load Playlist"
+								icon="pi pi-download"
+								class="p-button-sm p-button-outlined"
+								@click="loadPlaylist"
+							/>
+						</div>
+					</template>
+				</Card>
 			</div>
-			<div class="main-content">
-				<FileList
-					:audioFiles="audioFiles"
-					@file-selected="onFileSelect"
-					@file-list-updated="onFileListUpdated"
-					:selectedIndex="selectedIndex"
-					:playingIndex="selectedIndex"
-					:playbackState="playbackState"
-					@update:selectedIndex="onSelectedIndexUpdate"
-				/>
-				<AudioPlayer
-					ref="audioPlayerRef"
-					:key="selectedFile?.url || ''"
-					:currentAudio="selectedFile?.url || ''"
-					@ended="onAudioEnded"
-					@play="onPlay"
-					@pause="onPause"
-					@stop="onStop"
-				/>
+			<div class="main-content" style="flex: 1; min-width: 0">
+				<Card class="p-mb-4">
+					<template #title>Audio Files</template>
+					<template #content>
+						<FileList
+							:audioFiles="audioFiles"
+							@file-selected="onFileSelect"
+							@file-list-updated="onFileListUpdated"
+							:selectedIndex="selectedIndex"
+							:playingIndex="selectedIndex"
+							:playbackState="playbackState"
+							@update:selectedIndex="onSelectedIndexUpdate"
+						/>
+					</template>
+				</Card>
 			</div>
+		</div>
+		<div class="player-footer">
+			<AudioPlayer
+				ref="audioPlayerRef"
+				:key="selectedFile?.url || ''"
+				:currentAudio="selectedFile?.url || ''"
+				:playbackState="playbackState"
+				:loop="loop"
+				:audioFiles="audioFiles"
+				:selectedIndex="selectedIndex"
+				@ended="onAudioEnded"
+				@play="onPlay"
+				@pause="onPause"
+				@stop="onStop"
+				@previous="playPrevious"
+				@next="playNext"
+				@toggle-loop="toggleLoop"
+			/>
 		</div>
 	</div>
 </template>
@@ -153,6 +180,56 @@ export default defineComponent({
 		// No playlist playback logic needed
 		const onAudioEnded = () => {
 			playbackState.value = "stopped";
+			if (loop.value) {
+				selectedIndex.value = 0;
+				selectedFile.value = audioFiles.value[0];
+				playbackState.value = "playing";
+				if (audioPlayerRef.value && audioPlayerRef.value.onPlay) {
+					audioPlayerRef.value.onPlay();
+				}
+			} else {
+				playNext();
+			}
+		};
+
+		const loop = ref(false);
+
+		const toggleLoop = () => {
+			loop.value = !loop.value;
+		};
+
+		const playPrevious = async () => {
+			if (audioFiles.value.length === 0) return;
+			if (selectedIndex.value > 0) {
+				selectedIndex.value--;
+			} else if (loop.value && audioFiles.value.length > 0) {
+				selectedIndex.value = audioFiles.value.length - 1;
+			} else {
+				return;
+			}
+			selectedFile.value = audioFiles.value[selectedIndex.value];
+			playbackState.value = "stopped";
+			await nextTick();
+			if (audioPlayerRef.value && audioPlayerRef.value.onPlay) {
+				audioPlayerRef.value.onPlay();
+			}
+		};
+
+		const playNext = async () => {
+			if (audioFiles.value.length === 0) return;
+			if (selectedIndex.value < audioFiles.value.length - 1) {
+				selectedIndex.value++;
+			} else if (loop.value && audioFiles.value.length > 0) {
+				selectedIndex.value = 0;
+			} else {
+				return;
+			}
+			selectedFile.value = audioFiles.value[selectedIndex.value];
+			playbackState.value = "stopped";
+			await nextTick();
+			if (audioPlayerRef.value && audioPlayerRef.value.onPlay) {
+				audioPlayerRef.value.onPlay();
+			}
 		};
 
 		return {
@@ -178,6 +255,10 @@ export default defineComponent({
 			onPause,
 			onStop,
 			audioPlayerRef,
+			playPrevious,
+			playNext,
+			loop,
+			toggleLoop,
 		};
 	},
 });
@@ -185,40 +266,51 @@ export default defineComponent({
 
 <style scoped>
 #app {
-	text-align: center;
-	margin-top: 20px;
+	min-height: 100vh;
 }
 .dashboard {
 	display: flex;
 	justify-content: flex-start;
 	align-items: flex-start;
-	margin-top: 30px;
+	margin-top: 0;
 }
 .sidebar {
-	width: 250px;
-	min-width: 200px;
-	margin-right: 32px;
+	min-width: 260px;
+	max-width: 320px;
+	width: 100%;
+	margin-right: 2rem;
 }
 .main-content {
 	flex: 1;
 	min-width: 0;
 }
-.playlist-controls {
-	margin-top: 24px;
+.player-footer {
+	position: sticky;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	background: var(--surface-ground, #1a1a1a);
+	z-index: 100;
+	box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.2);
+	padding: 0.5rem 0 0.5rem 0;
 	display: flex;
-	flex-direction: column;
-	gap: 8px;
+	justify-content: center;
+	align-items: center;
 }
-.playlist-controls button {
-	padding: 6px 12px;
-	font-size: 1em;
-	border-radius: 4px;
-	border: 1px solid #ccc;
-	background: #f7f7f7;
+.loop-btn {
+	margin-left: 1.5rem;
+	font-size: 1.5em;
+	background: none;
+	border: none;
+	color: #fff;
 	cursor: pointer;
+	transition: color 0.2s;
+	outline: none;
 }
-.playlist-controls button:disabled {
-	opacity: 0.5;
-	cursor: not-allowed;
+.loop-btn.active {
+	color: #1db954;
+}
+.loop-btn:hover {
+	color: #1db954;
 }
 </style>

@@ -1,8 +1,26 @@
 <template>
 	<div class="file-list">
-		<h2>Audio Files</h2>
-		<label for="audio-file-input">Select audio files:</label>
-		<input id="audio-file-input" ref="fileInput" type="file" multiple accept="audio/*" @change="onFilesSelected" />
+		<div class="p-d-flex p-ai-center p-mb-3">
+			<input
+				id="audio-file-input"
+				ref="fileInput"
+				type="file"
+				multiple
+				accept="audio/*"
+				@change="onFilesSelected"
+				style="display: none"
+			/>
+			<Button
+				icon="pi pi-folder-open"
+				label="Browse Audio Files"
+				class="p-button-sm p-button-secondary"
+				@click="triggerFileInput"
+				aria-label="Select audio files"
+			/>
+			<span v-if="audioFiles.length" class="p-ml-2 file-list-selected-label">
+				{{ audioFiles.length }} file{{ audioFiles.length > 1 ? "s" : "" }} selected
+			</span>
+		</div>
 		<div v-if="!fileApiSupported" class="warning">Your browser does not support the File API required for local audio selection.</div>
 		<ul>
 			<li
@@ -24,10 +42,12 @@
 
 <script lang="ts">
 import { defineComponent, ref, onMounted, PropType, computed } from "vue";
+import Button from "primevue/button";
 import type { AudioFile } from "../types";
 
 export default defineComponent({
 	name: "FileList",
+	components: { Button },
 	props: {
 		audioFiles: {
 			type: Array as PropType<AudioFile[]>,
@@ -54,6 +74,10 @@ export default defineComponent({
 		onMounted(() => {
 			fileApiSupported.value = !!(window.File && window.FileReader && window.FileList && window.Blob);
 		});
+
+		const triggerFileInput = () => {
+			if (fileInput.value) fileInput.value.click();
+		};
 
 		const onFilesSelected = (event: Event) => {
 			const input = event.target as HTMLInputElement;
@@ -89,6 +113,7 @@ export default defineComponent({
 			fileInput,
 			fileApiSupported,
 			indicatorClass,
+			triggerFileInput,
 		};
 	},
 });
@@ -98,7 +123,10 @@ export default defineComponent({
 .file-list {
 	margin: 20px;
 }
-
+.file-list-selected-label {
+	color: var(--primary-color-text, #90caf9);
+	font-size: 0.95em;
+}
 .file-list h2 {
 	font-size: 1.5em;
 }
@@ -124,12 +152,10 @@ export default defineComponent({
 }
 
 .file-list li.selected {
-	background-color: #b3d4fc;
 	font-weight: bold;
 }
 
 .file-list li:hover {
-	background-color: #f0f0f0;
 }
 
 .playing-indicator {
